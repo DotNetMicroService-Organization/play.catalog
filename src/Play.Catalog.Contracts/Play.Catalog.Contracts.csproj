@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <PackageDescription>Play Economy Catalog microservice.</PackageDescription>
+		<Authors>Wando W Schneider</Authors>
+		<Company>DotNetMicroServices Org</Company>
   </PropertyGroup>
 
 </Project>
