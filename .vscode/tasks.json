@@ -7,10 +7,14 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Play.Catalog.Service.csproj",
+                "${workspaceFolder}/src/Play.Catalog.Services/Play.Catalog.Service.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": "$msCompile"
         },
         {
