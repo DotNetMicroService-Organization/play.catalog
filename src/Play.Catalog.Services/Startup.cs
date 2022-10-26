@@ -12,6 +12,7 @@ using Play.Common.MassTransit;
 using Play.Common.MongoDB;
 using Play.Common.Settings;
 using Play.Common.Identity;
+using Play.Common.HealthChecks;
 
 namespace Play.Catalog.Services
 {
@@ -61,6 +62,9 @@ namespace Play.Catalog.Services
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Play.Catalog.Services", Version = "v1" });
             });
+
+            services.AddHealthChecks()
+                .AddMongoDb();
         }
 
         private IBsonSerializer GuidSerializer(BsonType @string)
@@ -98,6 +102,7 @@ namespace Play.Catalog.Services
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapPlayEconomyHealthChecks();
             });
         }
     }
