@@ -13,6 +13,7 @@ using Play.Common.MongoDB;
 using Play.Common.Settings;
 using Play.Common.Identity;
 using Play.Common.HealthChecks;
+using Play.Common.Logging;
 
 namespace Play.Catalog.Services
 {
@@ -65,6 +66,8 @@ namespace Play.Catalog.Services
 
             services.AddHealthChecks()
                 .AddMongoDb();
+
+            services.AddSeqLogging(Configuration);
         }
 
         private IBsonSerializer GuidSerializer(BsonType @string)
