@@ -14,6 +14,7 @@ using Play.Common.Settings;
 using Play.Common.Identity;
 using Play.Common.HealthChecks;
 using Play.Common.Logging;
+using Play.Common.OpenTelemetry;
 
 namespace Play.Catalog.Services
 {
@@ -67,7 +68,8 @@ namespace Play.Catalog.Services
             services.AddHealthChecks()
                 .AddMongoDb();
 
-            services.AddSeqLogging(Configuration);
+            services.AddSeqLogging(Configuration)
+                    .AddTracing(Configuration);
         }
 
         private IBsonSerializer GuidSerializer(BsonType @string)
