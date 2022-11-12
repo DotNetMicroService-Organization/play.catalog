@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading.Tasks;
 using MassTransit;
@@ -17,6 +18,7 @@ namespace Play.Catalog.Services.Controllers
     public class ItemsController : ControllerBase
     {
         private const string AdminRole = "Admin";
+
 
         private readonly IRepository<Item> itemsRepository;
         private readonly IPublishEndpoint publishEndpoint;

@@ -69,7 +69,8 @@ namespace Play.Catalog.Services
                 .AddMongoDb();
 
             services.AddSeqLogging(Configuration)
-                    .AddTracing(Configuration);
+                    .AddTracing(Configuration)
+                    .AddMetrics(Configuration);
         }
 
         private IBsonSerializer GuidSerializer(BsonType @string)
@@ -95,6 +96,8 @@ namespace Play.Catalog.Services
                         .AllowAnyMethod();
                 });
             }
+
+            app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
             // app.UseHttpsRedirection();
 
