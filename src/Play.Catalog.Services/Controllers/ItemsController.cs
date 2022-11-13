@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading.Tasks;
 using MassTransit;
@@ -11,99 +10,98 @@ using Play.Catalog.Services.Dtos;
 using Play.Catalog.Services.Entities;
 using Play.Common;
 
-namespace Play.Catalog.Services.Controllers
+namespace Play.Catalog.Services.Controllers;
+
+[ApiController]
+[Route("items")]
+public class ItemsController : ControllerBase
 {
-    [ApiController]
-    [Route("items")]
-    public class ItemsController : ControllerBase
+    private const string AdminRole = "Admin";
+
+
+    private readonly IRepository<Item> itemsRepository;
+    private readonly IPublishEndpoint publishEndpoint;
+
+    public ItemsController(IRepository<Item> itemsRepository, IPublishEndpoint publishEndpoint)
     {
-        private const string AdminRole = "Admin";
+        this.itemsRepository = itemsRepository;
+        this.publishEndpoint = publishEndpoint;
+    }
 
+    [HttpGet]
+    [Authorize(Policies.Read)]
+    public async Task<ActionResult<IEnumerable<ItemDto>>> GetAsync()
+    {
+        var items = (await itemsRepository.GetAllAsync())
+                    .Select(item => item.AsDto());
 
-        private readonly IRepository<Item> itemsRepository;
-        private readonly IPublishEndpoint publishEndpoint;
+        return Ok(items);
+    }
 
-        public ItemsController(IRepository<Item> itemsRepository, IPublishEndpoint publishEndpoint)
+    [HttpGet("{id}")]
+    [Authorize(Policies.Read)]
+    public async Task<ActionResult<ItemDto>> GetByIdAsync(Guid id)
+    {
+        var item = await itemsRepository.GetAsync(id);
+
+        if (item is null)
+            return NotFound();
+
+        return item.AsDto();
+    }
+
+    [HttpPost]
+    [Authorize(Policies.Write)]
+    public async Task<ActionResult<ItemDto>> PostAsync(CreateItemDto createItemDto)
+    {
+        var item = new Item
         {
-            this.itemsRepository = itemsRepository;
-            this.publishEndpoint = publishEndpoint;
-        }
+            Name = createItemDto.Name,
+            Description = createItemDto.Description,
+            Price = createItemDto.Price,
+            CreatedDate = DateTimeOffset.UtcNow
+        };
 
-        [HttpGet]
-        [Authorize(Policies.Read)]
-        public async Task<ActionResult<IEnumerable<ItemDto>>> GetAsync()
-        {
-            var items = (await itemsRepository.GetAllAsync())
-                        .Select(item => item.AsDto());
+        await itemsRepository.CreateAsync(item);
 
-            return Ok(items);
-        }
+        await publishEndpoint.Publish(new CatalogItemCreated(item.Id, item.Name, item.Description, item.Price));
 
-        [HttpGet("{id}")]
-        [Authorize(Policies.Read)]
-        public async Task<ActionResult<ItemDto>> GetByIdAsync(Guid id)
-        {
-            var item = await itemsRepository.GetAsync(id);
+        return CreatedAtAction(nameof(GetByIdAsync), new { id = item.Id }, item);
+    }
 
-            if (item is null)
-                return NotFound();
+    [HttpPut("{id}")]
+    [Authorize(Policies.Write)]
+    public async Task<IActionResult> PutAsync(Guid id, UpdateItemDto updateItemDto)
+    {
+        var existingItem = await itemsRepository.GetAsync(id);
 
-            return item.AsDto();
-        }
+        if (existingItem is null)
+            return NotFound();
 
-        [HttpPost]
-        [Authorize(Policies.Write)]
-        public async Task<ActionResult<ItemDto>> PostAsync(CreateItemDto createItemDto)
-        {
-            var item = new Item
-            {
-                Name = createItemDto.Name,
-                Description = createItemDto.Description,
-                Price = createItemDto.Price,
-                CreatedDate = DateTimeOffset.UtcNow
-            };
+        existingItem.Name = updateItemDto.Name;
+        existingItem.Description = updateItemDto.Description;
+        existingItem.Price = updateItemDto.Price;
 
-            await itemsRepository.CreateAsync(item);
+        await itemsRepository.UpdateAsync(existingItem);
 
-            await publishEndpoint.Publish(new CatalogItemCreated(item.Id, item.Name, item.Description, item.Price));
+        await publishEndpoint.Publish(new CatalogItemUpdated(existingItem.Id, existingItem.Name, existingItem.Description, existingItem.Price));
 
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = item.Id }, item);
-        }
+        return Ok(existingItem);
+    }
 
-        [HttpPut("{id}")]
-        [Authorize(Policies.Write)]
-        public async Task<IActionResult> PutAsync(Guid id, UpdateItemDto updateItemDto)
-        {
-            var existingItem = await itemsRepository.GetAsync(id);
+    [HttpDelete("{id}")]
+    [Authorize(Policies.Write)]
+    public async Task<IActionResult> DeleteAsync(Guid id)
+    {
+        var item = await itemsRepository.GetAsync(id);
 
-            if (existingItem is null)
-                return NotFound();
+        if (item is null)
+            return NotFound();
 
-            existingItem.Name = updateItemDto.Name;
-            existingItem.Description = updateItemDto.Description;
-            existingItem.Price = updateItemDto.Price;
+        await itemsRepository.RemoveAsync(item.Id);
 
-            await itemsRepository.UpdateAsync(existingItem);
+        await publishEndpoint.Publish(new CatalogItemDeleted(item.Id));
 
-            await publishEndpoint.Publish(new CatalogItemUpdated(existingItem.Id, existingItem.Name, existingItem.Description, existingItem.Price));
-
-            return Ok(existingItem);
-        }
-
-        [HttpDelete("{id}")]
-        [Authorize(Policies.Write)]
-        public async Task<IActionResult> DeleteAsync(Guid id)
-        {
-            var item = await itemsRepository.GetAsync(id);
-
-            if (item is null)
-                return NotFound();
-
-            await itemsRepository.RemoveAsync(item.Id);
-
-            await publishEndpoint.Publish(new CatalogItemDeleted(item.Id));
-
-            return Ok(item);
-        }
+        return Ok(item);
     }
 }
