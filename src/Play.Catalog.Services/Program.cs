@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Play.Catalog.Services;
 using Play.Catalog.Services.Entities;
 using Play.Common.Configuration;
