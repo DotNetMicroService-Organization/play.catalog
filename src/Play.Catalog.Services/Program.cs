@@ -7,12 +7,10 @@ using Play.Common.Logging;
 using Play.Common.MassTransit;
 using Play.Common.MongoDB;
 using Play.Common.OpenTelemetry;
-using Play.Common.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
 const string AllowedOriginSetting = "AllowedOrigin";
-var serviceSettings = builder.Configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
 
 builder.Host.ConfigureAzureKeyVault();
 
